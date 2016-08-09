@@ -105,19 +105,70 @@ var RegisterFunctions = (function () {
         this.register.sp++;
         this.tick(3);
     };
+    /**
+     * Overwrites the value from the sender to the receiver
+     * @param registerReceiver
+     * @param registerSender
+     */
     RegisterFunctions.prototype.loadToFrom = function (registerReceiver, registerSender) {
         this.register[registerReceiver] = this.register[registerSender];
         this.tick(1);
     };
+    /**
+     * Loads a byte from the current program counter and writes it into the register
+     * @param registerName
+     */
     RegisterFunctions.prototype.loadReadInto = function (registerName) {
         this.register[registerName] = this.memory.readByte(this.register.pc);
         this.register.pc++;
         this.tick(2);
     };
     /**
+     * Loads from any address into the given register name
+     * @param address
+     * @param registerName
+     */
+    RegisterFunctions.prototype.loadByteAnyInto = function (address, registerName) {
+        // write into registerName from the memory address
+        this.register[registerName] = this.memory.readByte(address);
+        // takes two ticks (or 8 cycles)
+        this.tick(2);
+    };
+    /**
+     * Loads a byte into the register from the combined address value from H and L
+     * @param registerName
+     */
+    RegisterFunctions.prototype.loadHLinto = function (registerName) {
+        // make a 16bit address from register H and L
+        var address = (this.register.h << 8) + this.register.l;
+        // then write it into the register
+        this.loadByteAnyInto(address, registerName);
+    };
+    /**
+     * Loads a byte into the given register from the current program counter
+     * @param registerName
+     */
+    RegisterFunctions.prototype.loadPCinto = function (registerName) {
+        this.loadByteAnyInto(this.register.pc, registerName);
+    };
+    RegisterFunctions.prototype.writeByteAnyInto = function (address, registerName) {
+        this.memory.writeByte(address, this.register[registerName]);
+        this.tick(2);
+    };
+    RegisterFunctions.prototype.writeHLfrom = function (registerName) {
+        // make a 16bit address from register H and L
+        var address = (this.register.h << 8) + this.register.l;
+        // then write that from the register into the memory
+        this.writeByteAnyInto(address, registerName);
+    };
+    RegisterFunctions.prototype.writePCfrom = function (registerName) {
+        this.writeByteAnyInto(this.register.pc, this.register[registerName]);
+        this.register.pc++;
+    };
+    /**
      * PUBLIC API
      */
-    /* Overwrite from -> to register */
+    /* Overwrite from -> to register (was: LDrr_AA) */
     // into A register
     RegisterFunctions.prototype.LD_A_A = function () {
         this.loadToFrom("a", "a");
@@ -271,6 +322,72 @@ var RegisterFunctions = (function () {
     };
     RegisterFunctions.prototype.LD_L_L = function () {
         this.loadToFrom("l", "l");
+    };
+    /* Load value of HL address into register (was: LDrHLm_a) */
+    RegisterFunctions.prototype.LD_A_HL_read = function () {
+        this.loadHLinto("a");
+    };
+    RegisterFunctions.prototype.LD_B_HL_read = function () {
+        this.loadHLinto("b");
+    };
+    RegisterFunctions.prototype.LD_C_HL_read = function () {
+        this.loadHLinto("C");
+    };
+    RegisterFunctions.prototype.LD_D_HL_read = function () {
+        this.loadHLinto("d");
+    };
+    RegisterFunctions.prototype.LD_E_HL_read = function () {
+        this.loadHLinto("e");
+    };
+    RegisterFunctions.prototype.LD_H_HL_read = function () {
+        this.loadHLinto("h");
+    };
+    RegisterFunctions.prototype.LD_L_HL_read = function () {
+        this.loadHLinto("l");
+    };
+    /* Write value of register into memory of combined HL address (was: LDHLmr_a) */
+    RegisterFunctions.prototype.LD_HL_A_write = function () {
+        this.writeHLfrom("a");
+    };
+    RegisterFunctions.prototype.LD_HL_B_write = function () {
+        this.writeHLfrom("b");
+    };
+    RegisterFunctions.prototype.LD_HL_C_write = function () {
+        this.writeHLfrom("c");
+    };
+    RegisterFunctions.prototype.LD_HL_D_write = function () {
+        this.writeHLfrom("d");
+    };
+    RegisterFunctions.prototype.LD_HL_E_write = function () {
+        this.writeHLfrom("e");
+    };
+    RegisterFunctions.prototype.LD_HL_H_write = function () {
+        this.writeHLfrom("h");
+    };
+    RegisterFunctions.prototype.LD_HL_L_write = function () {
+        this.writeHLfrom("l");
+    };
+    /* Load a value of PC address into the register (was: LDrn_b) */
+    RegisterFunctions.prototype.LD_A_next = function () {
+        this.loadPCinto("a");
+    };
+    RegisterFunctions.prototype.LD_B_next = function () {
+        this.loadPCinto("b");
+    };
+    RegisterFunctions.prototype.LD_C_next = function () {
+        this.loadPCinto("c");
+    };
+    RegisterFunctions.prototype.LD_D_next = function () {
+        this.loadPCinto("d");
+    };
+    RegisterFunctions.prototype.LD_E_next = function () {
+        this.loadPCinto("e");
+    };
+    RegisterFunctions.prototype.LD_H_next = function () {
+        this.loadPCinto("h");
+    };
+    RegisterFunctions.prototype.LD_L_next = function () {
+        this.loadPCinto("l");
     };
     RegisterFunctions.prototype.NOP = function () {
         this.tick(1);

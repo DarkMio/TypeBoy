@@ -154,6 +154,12 @@ export class RegisterFunctions {
         this.tick(2);
     }
 
+    private loadByteAnyCombinedInto(firstRegister : string, secondRegister : string, targetRegister : string) {
+        var address = (this.register[firstRegister] << 8) + this.register[secondRegister];
+        this.loadByteAnyInto(address, targetRegister);
+
+    }
+
     /**
      * Loads a byte into the register from the combined address value from H and L
      * @param registerName
@@ -178,15 +184,20 @@ export class RegisterFunctions {
         this.tick(2);
     }
 
+
+    private writeAnyCombinedFrom(firstRegister: string, secondRegister: string, sourceRegister: string): void {
+        // combine the firstRegister value + secondRegister value to a 16bit number
+        var address = (this.register[firstRegister] << 8) + this.register[secondRegister];
+        // then write the source into that resulting address
+        this.writeByteAnyInto(address, sourceRegister);
+    }
+
     private writeHLfrom(registerName :string): void {
-        // make a 16bit address from register H and L
-        var address = (this.register.h << 8) + this.register.l;
-        // then write that from the register into the memory
-        this.writeByteAnyInto(address, registerName);
+        this.writeAnyCombinedFrom('h', 'l', registerName)
     }
 
     private writePCfrom(registerName :string): void {
-        this.writeByteAnyInto(this.register.pc, this.register[registerName]);
+        this.writeByteAnyInto(this.register.pc, registerName);
         this.register.pc++;
     }
 
@@ -421,6 +432,42 @@ export class RegisterFunctions {
         this.loadPCinto("l");
     }
 
+    /* Write a value of the pc-address into the address of HL (was: LDHLmn) */
+    LD_HL_N(): void { // this one is kinda nasty.
+        var address = (this.register.h << 8) + this.register.l;
+        this.memory.writeByte(address, this.memory.readByte(this.register.pc));
+        this.tick(3);
+    }
+
+    /* Write the value of register A into the combined address of MN (Was: LDBCmA) */
+    LD_BC_A(): void {
+        this.writeAnyCombinedFrom('b', 'c', 'a');
+    }
+
+    LD_DE_A(): void {
+        this.writeAnyCombinedFrom('d', 'e', 'a');
+    }
+
+    /* Write register A into the address of address that PC points to (was: LDmmA)*/
+    LD_NN_A(): void {
+        var address = this.memory.readWord(this.register.pc);
+        this.memory.writeByte(address, this.register.a);
+    }
+
+    /* Load any combined registers into a target register (was: LDABCm) */
+    LD_A_BC(): void {
+        this.loadByteAnyCombinedInto('b', 'c', 'a');
+    }
+
+    LD_A_DE(): void {
+        this.loadByteAnyCombinedInto('d', 'e', 'a');
+    }
+
+    /* Load the address pointer pointing from PC into A */
+    LD_A_NN(): void {
+        this.loadByteAnyInto(this.memory.readWord(this.register.pc), 'a');
+        this.tick(2);
+    }
 
     NOP(): void { // do nothing but take one instruction.
         this.tick(1);

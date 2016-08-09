@@ -1,12 +1,16 @@
 import {MemoryManager} from "./MemoryManager";
+import {RegisterFunctions} from "./RegisterFunctions";
+
 
 class Z80 {
     state: CPUState;
     register: Register;
     clock: Clock;
     memory: MemoryManager;
+    functions: RegisterFunctions;
     constructor() {
         this.reset();
+
     }
 
     reset() { // cleanup and init
@@ -14,6 +18,8 @@ class Z80 {
         this.register = this.state.register;
         this.clock = this.state.clock;
         this.memory = new MemoryManager();
+
+        this.functions = new RegisterFunctions(this.register, this.memory);
     }
 
     ADD_E() { // Add E to A, Result in A: ADD A, E
@@ -62,6 +68,9 @@ class Z80 {
         this.register.clock.m = 3;
     }
 
+    /**
+     * Needs implementation
+     */
     LD_A_mm() { // Read a byte from absolute location into A (LD A, addr)
         var addr = this.memory.readWord(this.register.pc);  // Get instruction from program counter
         this.register.pc += 2;                              // advance the PC (for two byte)
@@ -89,7 +98,7 @@ class Clock {
     }
 }
 
-class Register {
+export class Register {
     a: number;  // 8-bit Register
     b: number;  // 8-bit Register
     c: number;  // 8-bit Register

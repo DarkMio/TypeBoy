@@ -1,5 +1,6 @@
 "use strict";
 var MemoryManager_1 = require("./MemoryManager");
+var RegisterFunctions_1 = require("./RegisterFunctions");
 var Z80 = (function () {
     function Z80() {
         this.reset();
@@ -9,6 +10,7 @@ var Z80 = (function () {
         this.register = this.state.register;
         this.clock = this.state.clock;
         this.memory = new MemoryManager_1.MemoryManager();
+        this.functions = new RegisterFunctions_1.RegisterFunctions(this.register, this.memory);
     };
     Z80.prototype.ADD_E = function () {
         this.register.a += this.register.e;
@@ -51,6 +53,9 @@ var Z80 = (function () {
         this.register.sp++; // count stack point up
         this.register.clock.m = 3;
     };
+    /**
+     * Needs implementation
+     */
     Z80.prototype.LD_A_mm = function () {
         var addr = this.memory.readWord(this.register.pc); // Get instruction from program counter
         this.register.pc += 2; // advance the PC (for two byte)
@@ -91,4 +96,5 @@ var Register = (function () {
     }
     return Register;
 }());
+exports.Register = Register;
 //# sourceMappingURL=Z80.js.map
